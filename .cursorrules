@@ -1,0 +1,125 @@
+# .cursorrules for Split Kingdom
+
+# General Rules
+RULE: FOCUS ON CLARITY AND READABILITY over pure performance
+RULE: Use HTML5 and the latest stable versions of Tailwind CSS and Vanilla JavaScript
+RULE: Avoid any placeholders, incomplete functions, or TODOs in final code
+RULE: Use Tailwind CSS for styling and layout
+RULE: Attempt to iterate on only one feature at a time
+
+
+# HTML Rules
+HTML_RULE: Use semantic HTML5 elements
+HTML_RULE: Ensure accessibility features (aria-labels, alt tags)
+HTML_RULE: Consistent indentation (2 spaces)
+HTML_RULE: Concise class names aligned with Tailwind utility classes
+HTML_RULE: Inline <script> tags only for essential functionality; separate JavaScript files if significant logic
+
+# Tailwind CSS Rules
+TAILWIND_RULE: Use default Tailwind colors, with overrides for Split Kingdom theme
+TAILWIND_RULE: Consistent class stacking order (position, display, spacing, color)
+TAILWIND_RULE: Max three utility classes per line for readability
+TAILWIND_RULE: Avoid custom CSS if achievable with Tailwind classes
+
+# JavaScript Rules
+JS_RULE: Vanilla JavaScript only (no frameworks)
+JS_RULE: Use ES6+ syntax for all functions
+JS_RULE: Use "const" or "let" (no "var")
+JS_RULE: Favor arrow functions for short or inline functions
+JS_RULE: Structure and group related functions, with one primary function per feature (e.g., item selection, bill splitting)
+JS_RULE: Avoid inline JavaScript in HTML files unless essential
+
+# Security Rules
+SECURITY_RULE: Never expose Firebase or Venmo API keys; use .env for sensitive data
+SECURITY_RULE: Validate and sanitize all inputs, especially for item selection and payment amounts
+SECURITY_RULE: Implement error handling for API calls (Firebase, Google Vision, Venmo)
+
+# Project Structure Rules
+STRUCTURE_RULE: Follow project structure:
+    - HTML, CSS (Tailwind), and JS files in "public/"
+    - Backend logic in "src/" with modularized controllers
+    - Configurations in "config/"
+STRUCTURE_RULE: Organize reusable functions in "utils/"
+
+# General Rules
+RULE: Strict adherence to user flow and game rules as defined in project documentation
+RULE: Begin each feature with clear, detailed pseudocode; confirm pseudocode with team if complex
+RULE: Prioritize readability and structure in code, followed by performance
+RULE: Avoid placeholders, incomplete functions, or TODOs in final code
+
+# Node.js Backend Rules
+
+BACKEND_RULE: Node.js with Express.js for backend structure
+BACKEND_RULE: RESTful API best practices for route and controller design; each endpoint handles a single responsibility
+BACKEND_RULE: Secure API with JWT authentication; no sensitive data in responses
+BACKEND_RULE: Use modular controllers and services for business logic
+BACKEND_RULE: Use a centralized Enum for Request and Entry states to ensure consistent state transitions
+BACKEND_RULE: Use middleware like `express-validator` or `Joi` for input validation and sanitation
+BACKEND_RULE: Standardize error responses using a structured error-handling utility; include status codes and messages
+BACKEND_RULE: Implement logging with a library like `winston` or `morgan` for debugging and monitoring
+BACKEND_RULE: Use Firestore transactions and batched writes for complex operations to minimize database calls
+BACKEND_RULE: Validate user identity and permissions before processing sensitive actions (e.g., payment)
+BACKEND_RULE: Never expose sensitive data (e.g., JWT secrets, Firebase API keys) in codebase
+BACKEND_RULE: Only create Entry after payment is confirmed and admin approval is granted
+
+
+# Firebase Firestore Rules
+FIREBASE_RULE: Use Firestore as primary database, with Firebase SDK for integration
+FIREBASE_RULE: Structure Firestore collections according to project design:
+    - Separate collections for Requests, Entries, and Users
+    - Each Entry should track its own Picks and status (e.g., active or eliminated)
+    - Track Requests and Entries separately; Entries are numbered 1, 2, 3 per User per Pool
+FIREBASE_RULE: Set Firestore security rules to restrict access based on user role (e.g., User, Admin)
+FIREBASE_RULE: Limit Requests to 3 per User per Pool with schema validation
+FIREBASE_RULE: Implement atomic writes for scoring updates to ensure consistency
+FIREBASE_RULE: Use Firestore’s real-time updates for responsive client interfaces (if needed)
+
+# Google Vision Document AI Rules
+VISION_RULE: Integrate Google Vision Document AI for receipt parsing
+VISION_RULE: Handle parsed receipt data securely; avoid storing sensitive receipt data unnecessarily
+VISION_RULE: Validate and sanitize extracted data before processing to avoid malformed entries
+VISION_RULE: Implement error handling for Vision API interactions (e.g., timeouts, failures)
+VISION_RULE: Ensure Vision API keys are securely stored (use .env file and environment variables)
+VISION_RULE: Keep API requests minimal; batch-process receipt data where possible
+
+# Frontend Rules
+FRONTEND_RULE: Use React.js for admin panel (optional); follow React best practices
+FRONTEND_RULE: Component-based architecture with functional components and hooks
+FRONTEND_RULE: Strictly controlled form inputs with validation
+FRONTEND_RULE: Minimal use of state management for efficiency; avoid redundant re-renders
+
+# Pick Management Rules
+PICK_RULE: Each Entry tracks Picks separately; users can update Picks until the weekly deadline
+PICK_RULE: Deadline enforcement: Picks lock at 1 PM Sunday or game start, whichever comes first
+PICK_RULE: Picks are tracked and scored separately per Entry
+
+# Scoring and Ranking Rules
+SCORING_RULE: Scoring logic updates Entry status after games (win: advance, loss: eliminate)
+SCORING_RULE: Rank Entries independently per Pool in standings
+SCORING_RULE: Users can view individual Picks and scores; display standings after scoring completes
+
+# Authentication & Security Rules
+AUTH_RULE: Secure all routes with JWTs; refresh tokens as necessary
+AUTH_RULE: Never expose sensitive data (e.g., JWT secrets, Firebase API keys) in codebase
+AUTH_RULE: Validate user identity and permissions before processing sensitive actions (e.g., payment)
+AUTH_RULE: Implement role-based access controls (e.g., User, Admin)
+AUTH_RULE: Use .env for API keys and Firebase credentials to avoid exposing them in code
+
+# Strategic Planning with Pseudocode
+STRATEGY_RULE: Write pseudocode for each feature before coding
+STRATEGY_RULE: Summarize user interactions, API endpoints, and business logic in pseudocode first
+STRATEGY_RULE: Example pseudocode: weekly scoring, Request/Entry flow, deadline enforcement, etc.
+
+# Code Quality Rules
+QUALITY_RULE: Write secure, efficient code using RESTful best practices
+QUALITY_RULE: Keep functions short and focused on a single task
+QUALITY_RULE: Use meaningful variable and function names; consistent camelCase naming
+QUALITY_RULE: Document complex logic with concise comments
+QUALITY_RULE: Consistently test API endpoints for functionality and error handling
+QUALITY_RULE: Maintain version control with clear Git commit messages
+QUALITY_RULE: Optional: Dockerize for deployment if required by the environment
+
+# Deployment Rules
+DEPLOY_RULE: Dockerize project if required, with separate containers for backend and database
+DEPLOY_RULE: Set up environment variables for sensitive data (e.g., JWT secret, Firebase credentials)
+DEPLOY_RULE: Use CI/CD pipeline for testing and deploying (optional)

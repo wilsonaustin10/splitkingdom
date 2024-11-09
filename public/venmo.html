@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Kingdom - Venmo Link</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#f0f2f5]">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Venmo Link Input Section -->
+        <section id="venmo-link-section" class="max-w-md mx-auto">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h1 class="text-3xl font-bold text-[#1877f2] mb-6">Share Your Majesty's Venmo Link</h1>
+                <button 
+                    id="getVenmoLinkBtn"
+                    class="w-full bg-[#1877f2] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 mb-4"
+                >
+                    Get Venmo Link
+                </button>
+                <form id="venmoForm" class="space-y-4">
+                    <div>
+                        <label class="block text-gray-700 mb-2" for="venmoLink">
+                            Share your link to collect your bounty:
+                        </label>
+                        <input 
+                            type="url" 
+                            id="venmoLink" 
+                            name="venmoLink" 
+                            placeholder="https://venmo.com/u/username" 
+                            required 
+                            class="w-full p-2 border border-gray-300 rounded"
+                        >
+                        <p class="text-sm text-gray-500 mt-1">
+                            Format: https://venmo.com/u/username
+                        </p>
+                    </div>
+                    <button 
+                        type="submit" 
+                        class="w-full bg-[#1877f2] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 mt-4"
+                    >
+                        Save Venmo Link
+                    </button>
+                </form>
+                <div id="loadingSpinner" class="hidden mt-4">
+                    <div class="animate-spin rounded-full h-8 w-8 border-b-2 border-[#1877f2] mx-auto"></div>
+                    <p class="text-gray-600 text-center mt-2">Saving your royal decree...</p>
+                </div>
+                <div id="venmoStatus" class="mt-4 text-center text-gray-600"></div>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const venmoForm = document.getElementById('venmoForm');
+            const venmoStatus = document.getElementById('venmoStatus');
+            const venmoInput = document.getElementById('venmoLink');
+            const loadingSpinner = document.getElementById('loadingSpinner');
+
+            // Get receipt_id from URL parameters
+            const params = new URLSearchParams(window.location.search);
+            const receiptId = params.get('receipt_id');
+            
+            console.log('Receipt ID from URL:', receiptId); // Debug log
+
+            if (!receiptId) {
+                venmoStatus.innerText = 'Receipt ID not found. Please go back and try again.';
+                return;
+            }
+
+            const getVenmoLinkBtn = document.getElementById('getVenmoLinkBtn');
+            getVenmoLinkBtn.addEventListener('click', () => {
+                // Check if user is on mobile
+                const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+                
+                if (isMobile) {
+                    // Direct deep link to Venmo app
+                    window.location.href = 'venmo://';
+                } else {
+                    // Desktop behavior remains the same
+                    window.open('https://venmo.com/account/sign-in', '_blank');
+                }
+                
+                // Update status to guide user
+                venmoStatus.innerText = 'Please sign in to Venmo, copy your profile link, and paste it here.';
+            });
+
+            venmoForm.addEventListener('submit', async (e) => {
+                e.preventDefault();
+                
+                // Show spinner, hide status
+                loadingSpinner.classList.remove('hidden');
+                venmoStatus.innerText = '';
+                
+                const venmoLink = venmoInput.value.trim();
+                
+                console.log('Submitting Venmo link:', {
+                    venmoLink,
+                    receiptId
+                });
+
+                try {
+                    const url = new URL(venmoLink);
+                    if (!url.hostname.includes('venmo.com') || !url.pathname.startsWith('/u/')) {
+                        venmoStatus.innerText = 'Please enter a valid Venmo link in the format: https://venmo.com/u/username';
+                        return;
+                    }
+
+                    const response = await fetch('/api/venmo', {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json',
+                        },
+                        body: JSON.stringify({
+                            receipt_id: receiptId,
+                            venmo_link: venmoLink,
+                        }),
+                    });
+                    
+                    console.log('Response status:', response.status); // Debug log
+
+                    const result = await response.json();
+                    console.log('Venmo API response:', result);
+
+                    if (result.success) {
+                        // Hide spinner before showing success message
+                        loadingSpinner.classList.add('hidden');
+                        venmoStatus.innerText = 'Venmo link saved successfully!';
+                        setTimeout(() => {
+                            window.location.href = `./final-bill.html?receipt_id=${receiptId}`;
+                        }, 2000);
+                    } else {
+                        // Hide spinner before showing error
+                        loadingSpinner.classList.add('hidden');
+                        venmoStatus.innerText = `Failed to save Venmo link: ${result.message}`;
+                        if (result.debug) {
+                            console.log('Debug info:', result.debug);
+                        }
+                    }
+                } catch (error) {
+                    console.error('Venmo Link Error:', error);
+                    venmoStatus.innerText = `An error occurred: ${error.message}`;
+                }
+            });
+        });
+    </script>
+</body>
+</html> 

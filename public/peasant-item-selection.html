@@ -1,0 +1,166 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Split Kingdom - Item Selection</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-[#f0f2f5]">
+    <div class="container mx-auto px-4 py-8">
+        <!-- Item Selection Section -->
+        <section id="item-selection-section" class="max-w-md mx-auto">
+            <div class="bg-white p-6 rounded-lg shadow-md">
+                <h1 class="text-3xl font-bold text-[#1877f2] mb-6">Select Your Items</h1>
+                <div id="itemsList" class="space-y-4 mb-6">
+                    <!-- Items will be populated here -->
+                </div>
+                <div class="flex justify-between mb-4">
+                    <span class="font-semibold">Subtotal:</span>
+                    <span id="subtotal">$0.00</span>
+                </div>
+                <div class="flex justify-between mb-6">
+                    <span class="font-semibold">Tax:</span>
+                    <span id="tax">$0.00</span>
+                </div>
+                <div class="flex justify-between mb-6">
+                    <span class="font-semibold">Tip:</span>
+                    <span id="tip">$0.00</span>
+                </div>
+                <div class="flex justify-between mb-6">
+                    <span class="text-xl font-bold">Total:</span>
+                    <span id="total" class="text-xl font-bold">$0.00</span>
+                </div>
+                <a 
+                    href="#" 
+                    id="payButton" 
+                    class="w-full bg-[#1877f2] text-white px-4 py-2 rounded-lg font-semibold hover:bg-blue-600 disabled:bg-gray-400"
+                    disabled
+                >
+                    Proceed to Payment
+                </a>
+            </div>
+        </section>
+    </div>
+
+    <!-- Scripts -->
+    <script>
+        document.addEventListener('DOMContentLoaded', async () => {
+            // Function to get query parameters
+            const getQueryParams = () => {
+                const params = {};
+                window.location.search.substring(1).split('&').forEach(pair => {
+                    const [key, value] = pair.split('=');
+                    if (key) params[decodeURIComponent(key)] = decodeURIComponent(value || '');
+                });
+                return params;
+            };
+
+            const params = getQueryParams();
+            const receiptId = params.receipt_id;
+
+            if (!receiptId) {
+                alert('No receipt ID found. Please go back and process your receipt again.');
+                window.location.href = '/';
+                return;
+            }
+
+            try {
+                const response = await fetch(`/api/receipt/${receiptId}`);
+                const result = await response.json();
+
+                if (result.success) {
+                    const receiptData = result.receiptData;
+                    const { items, total_amount, tax, venmo_link } = receiptData;
+
+                    const itemsList = document.getElementById('itemsList');
+                    const subtotalSpan = document.getElementById('subtotal');
+                    const taxSpan = document.getElementById('tax');
+                    const tipSpan = document.getElementById('tip');
+                    const totalSpan = document.getElementById('total');
+                    const payButton = document.getElementById('payButton');
+
+                    let subtotal = 0;
+
+                    // Populate items with checkboxes
+                    items.forEach((item, index) => {
+                        subtotal += item.price * (item.quantity || 1);
+                        const itemDiv = document.createElement('div');
+                        itemDiv.className = 'flex items-center';
+                        itemDiv.innerHTML = `
+                            <input type="checkbox" id="item-${index}" data-price="${item.price}" class="mr-2">
+                            <label for="item-${index}" class="text-gray-700">${item.name} - $${item.price.toFixed(2)} x ${item.quantity || 1}</label>
+                        `;
+                        itemsList.appendChild(itemDiv);
+                    });
+
+                    subtotalSpan.innerText = `$${subtotal.toFixed(2)}`;
+                    taxSpan.innerText = `$${tax.toFixed(2)}`;
+                    tipSpan.innerText = `$${(receiptData.tip || 0).toFixed(2)}`;
+                    totalSpan.innerText = `$${(subtotal + tax + (receiptData.tip || 0)).toFixed(2)}`;
+
+                    // Handle checkbox changes to calculate individual totals
+                    const checkboxes = itemsList.querySelectorAll('input[type="checkbox"]');
+                    checkboxes.forEach(checkbox => {
+                        checkbox.addEventListener('change', updateTotal);
+                    });
+
+                    function updateTotal() {
+                        let selectedSubtotal = 0;
+                        checkboxes.forEach(cb => {
+                            if (cb.checked) {
+                                selectedSubtotal += parseFloat(cb.getAttribute('data-price')) * (1); // Assuming quantity = 1 for simplicity
+                            }
+                        });
+                        const grandTotal = selectedSubtotal + tax + (receiptData.tip || 0);
+                        totalSpan.innerText = `$${grandTotal.toFixed(2)}`;
+
+                        // Enable pay button only if at least one item is selected
+                        payButton.disabled = selectedSubtotal === 0;
+                        if (!payButton.disabled) {
+                            payButton.classList.remove('disabled:bg-gray-400');
+                        } else {
+                            payButton.classList.add('disabled:bg-gray-400');
+                        }
+                    }
+
+                    // Handle Pay Button Click
+                    payButton.addEventListener('click', () => {
+                        if (!venmo_link) {
+                            alert('Venmo link not found.');
+                            return;
+                        }
+
+                        // Calculate selected items total
+                        let selectedTotal = 0;
+                        checkboxes.forEach(cb => {
+                            if (cb.checked) {
+                                selectedTotal += parseFloat(cb.getAttribute('data-price'));
+                            }
+                        });
+
+                        if (selectedTotal === 0) {
+                            alert('Please select at least one item to proceed.');
+                            return;
+                        }
+
+                        // Construct Venmo payment URL
+                        const paymentURL = `${venmo_link}?txn=pay&amount=${selectedTotal.toFixed(2)}&note=Payment for your items`;
+
+                        // Redirect to Venmo
+                        window.open(paymentURL, '_blank');
+                    });
+
+                } else {
+                    alert(`Error fetching receipt: ${result.message}`);
+                    window.location.href = '/';
+                }
+            } catch (error) {
+                console.error('Error fetching receipt data:', error);
+                alert('An error occurred while fetching receipt data.');
+                window.location.href = '/';
+            }
+        });
+    </script>
+</body>
+</html> 
