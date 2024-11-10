@@ -4,7 +4,13 @@ const { parseReceipt } = require('../utils/vision'); // Import the Vision utilit
 const admin = require('firebase-admin');
 
 // Initialize Firebase Admin SDK
-const serviceAccount = require('../../config/serviceAccountKey.json'); // Ensure this file exists and is secure
+let serviceAccount;
+if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+  serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+} else {
+  // For local development
+  serviceAccount = require('../../config/serviceAccountKey.json');
+}
 
 admin.initializeApp({
   credential: admin.credential.cert(serviceAccount),
