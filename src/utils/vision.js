@@ -2,12 +2,29 @@ const vision = require('@google-cloud/vision');
 const path = require('path');
 
 // Initialize the client with the correct authentication
-const client = new vision.ImageAnnotatorClient({
-  keyFilename: path.join(__dirname, '../../config/document-ai-servicekey.json')
-});
+let client;
 
-console.log('Vision API Client initialization path:', path.join(__dirname, '../../config/document-ai-servicekey.json'));
-console.log('Vision API Client initialized:', !!client);
+try {
+  // Check if we're in production (Render.com)
+  if (process.env.NODE_ENV === 'production') {
+    // Use environment variable
+    const credentials = JSON.parse(process.env.GOOGLE_VISION_SERVICE_ACCOUNT);
+    client = new vision.ImageAnnotatorClient({
+      credentials: credentials
+    });
+    console.log('Vision API Client initialized with environment variables');
+  } else {
+    // Use local file for development
+    const keyFilePath = path.join(__dirname, '../../config/document-ai-servicekey.json');
+    client = new vision.ImageAnnotatorClient({
+      keyFilename: keyFilePath
+    });
+    console.log('Vision API Client initialized with local file:', keyFilePath);
+  }
+} catch (error) {
+  console.error('Error initializing Vision API client:', error);
+  throw error;
+}
 
 /**
  * Parses a receipt image using Google Vision Document AI
