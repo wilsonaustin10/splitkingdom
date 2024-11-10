@@ -11,7 +11,6 @@ dotenv.config({ path: path.join(__dirname, '../config/.env') });
 
 const app = express();
 const PORT = process.env.PORT || 3000;
-const HOST = '192.168.86.248';  // This allows connections from any network interface
 
 // Debug: Add this to verify environment variables are loaded
 console.log('Environment variables loaded:', {
@@ -50,10 +49,8 @@ app.use((req, res) => {
   res.status(404).sendFile(path.join(__dirname, '../public/404.html'));
 });
 
-app.listen(PORT, HOST, () => {
-  console.log(`Server is running on http://${HOST}:${PORT}`);
-  console.log(`Access locally via http://localhost:${PORT}`);
-  console.log(`Access on network via http://YOUR_IP:${PORT}`);
+app.listen(PORT, () => {
+  console.log(`Server is running on port ${PORT}`);
 });
 
 // After dotenv.config()
